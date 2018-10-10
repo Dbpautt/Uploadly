@@ -2,89 +2,87 @@
 
 ## Description
 
-This is a SPA where users can view documents and admins can upload them.
+This is a SPA where users can view documents that were created and uploaded by users with admin rights.
 
 ## User Stories
 
 -  **404:** As an anon/user I want to see a 404 page if I try to reach a page that does not exist so that I know it's my fault.
--  **Create users:** As an admin I want to create users and give them access rights.
--  **Login:** As a user/admin I want to login to the platform so that I can see my documents.
--  **Logout:** As a user I want logout from the platform so no one else can see my documents.
--  **Upload documents** As an admin I want to upload and preview documents assigned to a user.
--  **Profile** As a user I want to see what documents I have in my profile and know when did I received the document.
--  **Give feedback** As a user I want to give feedback on the documents before returning them to admin.
--  **See the app description** Additionally as a user I want to see a description of the uses of the app.
--  **Delete documents** As an admin I want to delete document if theres a wrong file upload.
--  **Delete users** As an admin I want to delete users so the database is up to date.
+- **500:**
+-  **Signup:** As a user I want to sign up to the platform so I can upload documents and create users.
+-  **Login:** As a user/admin I want to log in to the platform so I can see my documents.
+-  **Logout:** As a user I want to logout from the platform so no one else can see my documents.
+-  **Create users:** As an admin I want to create users so I can share documents with them, and they can access their docs.
+-  **List users:** As an admin I want to list users so I can access their profiles to see their current documents.
+-  **Users profile:** As an admin I want to see users profiles so I can upload files to their profiles.
+-  **Upload document** As an admin I want to upload a document and preview documents assigned to a user.
+-  **User profile** As a user I want to see what documents I have in my profile.
+-  **Document detail** As a user I want to review a document so I can understand what the document is about.
 
 
 ## Backlog
 
-Update documents
+-  **Document comments:** As a user I want to comment on the documents so that I can ask for changes if they are required.
+-  **See the app description** As a user I want to see a description of the uses of the app.
+-  **Document delete** As an admin I want to delete documents if there's a wrong file upload.
+-  **User delete** As an admin I want to delete users so the database is up to date. 
+-  **Document status** As a user I want to see when a certain document was last updated or uploaded.
+-  **User status** As an admin I want to know when a user last logged in to know whether an account has gone stale. 
+
 
 Emails:
-- receive new user notification
+- Receive new user notification.
 
 File upload from users:
-- Upload files with modifications
+- Upload files with modifications.
 
 Search bar:
-- Search for documents
+- Search for documents.
 
 Notifications:
 - Receive notifications when there's a new comment.
-- Posting comments/feedback (users)
-- Receiving notification of commects (admin)
-- Reply to the comments (admin/user)
-- Display the threads
-- Limit the threads
-- "See more"
+- Post comments/feedback (users).
+- Receive notification of comments (admin).
+- Reply to the comments (admin/user).
+- Display the communication threads.
+- Limit the threads to the most current 5.
+- "See more".
   
 # Client
 
-> Admin
 ## Routes
 
-- / - Homepage
-- /auth/login - Login form
-- /user/create - users list
-- /user - users list
-- /user/profile - user document list
-- /user/:id/delete - delete user
-- /document - documents list
-- /document/create - documents create
-- /document/detail - document detail 
-- /document/:id/delete - delete document
+- / - Homepage (public)
+- /login - login form (anon)
+- /signup - signup form (admin)
+- /user/create - show user create form (admin)
+- /dashboard - users list (admin)
+- /user/:id - user document list (admin)
+- /user/:id/document/create - documents create (admin)
+- /user/:id/document/:id - document detail (admin)
+- /profile/me - document list (user)
+- /profile/me/document/:id - document detail (user)
 
-> User
-## Routes
-
-- / - Homepage
-- /auth/login - Login form
-- /document - document list (that belong to me)
-- /document/detail - document detail 
-- /profile/me - my documents - @toask (Should this be by id and not /me so admins can access?)
-- 404
 
 ## Pages
 
-- Home Page (public)
-- Log in Page (anon only)
-- User Create (admin only)
-- Profile Page (user only)
-- Document List Page (admin , users)
-- User List Page (admin)
-- 404 Page (public)
+- Homepage
+- Log in page
+- Sign up page
+- Dashboard page
+- User create form page
+- User profile page
+- Document detail page
+- 404 Page
+- 500 Page
 
 ## Components
 
 - User Card component
   - Input: user: any
-  - Output: last login, users name, number of documents.
+  - Shows user name, number of documents.
 - Document component
-  - Output: document(title: string, type: string, last update date, own of uploading )
-
-## IO
+  - Input: document
+  - Shows document (title: string, type: string)
 
 
 ## Services
@@ -99,12 +97,10 @@ Notifications:
   - document.list()
   - document.create(data)
   - document.detail(id)
-  - document.removeDocument(id)   
 - User Service
   - user.list()
   - user.create(data)
   - user.profile(id)
-  - user.removeUser(id)
 
 # Server
 
@@ -116,7 +112,7 @@ User model
 username - String // required
 password - String // required
 role - String [enum: 'admin', 'user']
-lastLogin - timestamp
+createdBy: ObjectID<User> 
 ```
 
 Document model
@@ -125,38 +121,74 @@ Document model
 recipient - ObjectID<User> // required
 uploadedBy - ObjectID<User> // required // default : currentUser
 name - String // required
+description - String // required
 type - String [enum: 'contract', 'proposal', 'presentation', 'survey']
-lastUpdate - date
 ```
 
 ## API Endpoints/Backend Routes
 
 - GET /
-- GET /auth/me - @toask (related to question above on id vs me)
-- POST /auth/login
+- GET /auth/me 
+  - requires user
+- POST /auth/signup
+  - requires anon
   - body:
     - username
     - password
-- POST /auth/logout
-  - body: (empty)
+  - creates user with admin rights
+  - returns user
+- POST /auth/login
+  - requires anon
+  - body:
+    - username
+    - password
 - POST /user/create
+ - requires admin
  - body:
     - username
     - password
+    - admin id
+    - created on
+  - create user
+  - returns user
 - GET /user
-- GET /user/:id/profile
-- DELETE /user/:id
-  - body: (empty)
-- GET /document
-- POST /document/create
+  - requires admin
+  - returns all users created by the currentUser
+- GET /user/:id
+  - requires admin
+  - validate valid id
+  - validate if user exists and was created by currentUser
+
+POST /user/:id/document/create
+  - requires admin
+  - validate valid id
+  - validate if user exists and was created by currentUser
   - body:
     - name
     - recipient
     - type
     - lastUpdate
     - uploadedBy
-- GET /document/:id
-- DELETE /document/:id
+  - upload file
+  - create doc
+  - returns doc
+  
+- GET /user/:id/document/:id/detail
+  - requires user
+  - validate valid user id, document id, document is owned by the recipient (user id)
+- GET /profile/me
+  - validate valid id
+  - validate if user exists and was created by currentUser
+  - requires user
+- GET /profile/me/document/:id
+  - validate valid user id, document id, document is owned by the recipient (user id)
+  - validate if user exists and was created by currentUser
+  - requires user
+- POST /auth/logout
+  - requires user
+  - validate if user exists and was created by currentUser
+  - body: (empty)
+
 
 
 ## Links
